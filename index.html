@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seputar Converter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 700px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .method-selector {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .method-selector h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .method-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .method-option {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .method-option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .method-option.active {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .method-option h4 {
+            color: #667eea;
+            font-size: 14px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .method-option p {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+
+        .badge.recommended {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .badge.free {
+            background: #2196F3;
+            color: white;
+        }
+
+        .badge.pro {
+            background: #FF9800;
+            color: white;
+        }
+
+        .info-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.6;
+            display: none;
+        }
+
+        .info-box.show {
+            display: block;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: #e0e0e0;
+        }
+
+        .converter-section {
+            display: none;
+        }
+
+        .converter-section.active {
+            display: block;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            background: #f8f9ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background: #f0f4ff;
+            border-color: #764ba2;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-info {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .file-size {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .convert-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: none;
+        }
+
+        .convert-btn.show {
+            display: block;
+        }
+
+        .convert-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .convert-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.processing {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .progress-bar.show {
+            display: block;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .api-setup {
+            background: #e3f2fd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .api-setup.show {
+            display: block;
+        }
+
+        .api-setup h4 {
+            color: #1976d2;
+            margin-bottom: 15px;
+        }
+
+        .api-setup ol {
+            margin-left: 20px;
+            line-height: 1.8;
+            color: #555;
+        }
+
+        .api-setup a {
+            color: #1976d2;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .api-setup a:hover {
+            text-decoration: underline;
+        }
+
+        .input-group {
+            margin-top: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .comparison-table {
+            margin-top: 15px;
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .comparison-table th {
+            background: #f5f5f5;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .comparison-table .check {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .comparison-table .cross {
+            color: #f44336;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #f0f0f0;
+            text-align: center;
+        }
+
+        .footer p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .powered-by {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 13px;
+            color: #888;
+        }
+
+        .powered-by img {
+            height: 24px;
+            vertical-align: middle;
+        }
+
+        .powered-by span {
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SEPUTAR CONVERTER</h1>
+    
+        <div class="api-setup">
+            <h4>📋 API Key CloudConvert:</h4>
+            <div class="input-group">
+                <label>API Key (Sudah Terisi):</label>
+                <input type="text" id="apiKey" value="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIxIiwianRpIjoiNjM4NjEwZDRiYmRkMWVkMzM5ZmJhNjZhNjRlMTM3OTcyZjU5OGFhOTI5Mzg1YjU1NTNmNjc3MTkwMTc1Yjc5MjgwMGFiZDMyMWFlMWU0NmUiLCJpYXQiOjE3NjgxMTI2NTQuNjg1MzIyLCJuYmYiOjE3NjgxMTI2NTQuNjg1MzI0LCJleHAiOjQ5MjM3ODYyNTQuNjgwNTk1LCJzdWIiOiI3MzgxNTg1NCIsInNjb3BlcyI6WyJ1c2VyLnJlYWQiLCJ1c2VyLndyaXRlIiwidGFzay5yZWFkIiwidGFzay53cml0ZSIsIndlYmhvb2sucmVhZCIsIndlYmhvb2sud3JpdGUiLCJwcmVzZXQucmVhZCIsInByZXNldC53cml0ZSJdfQ.PrCoEo8FOM0701oEBkhpBm42cWs_c_n04ZRTnOWTcV6PtpgnYCnplzfXRcXALV0s7FNwHKTECmBYpusNx_i9V5WTiK6s29UXcVezpwWKSYml7n_bIkMWZN3jHFtpYkyq0TgLTzmk0izXdwkWetdMVsqNsCR2aHFILU05zY5zRtHMY8f7S3soC70w9_iA9oTV7bCsV6oUqH7CNb34H8HPjDWwPqsJ0qJNBzLE5SM1tubrf2nb06Ak_aE5o1xDXEekbE6CpTZp5pUfDja9LbFKjaH-fGjl2kR6QuPtUVkmlOCGRjhC3iA8KxBA7c-7-Flw5b2YukQqdWuCQt_TxBENP6iISJjfqwZAORa0Uw0nTVlhAgkCPLyRTy1qFOEBZvEcC6bFQLAeXzi84lBFWb0Ssbv3nyhnD0VcomXedz8uzZAqpewf29ZLIc5SYbAhqd2ViAl5VPKAf-sqPZytZdEPMWilzfgzKJ4IEYYXPSYyg6wxe9WqPHolfqWPwFpGWbyIQMk3H2uyr0iA9YKDHdGag0ZD5zjyq1gLh5V7k8lOtB_QOqL9y57wIJXQ7PqtIZUwfDBdLyrPhsLssgx1VvGUZJe53Y7QXevZYPLacBHXrtVUGXrjkSBZA1OJXQf9vfo2JsdWzTGwcn2XDnWZw80DnMCV6NnxOeYmHVFJ_wo6o78" readonly>
+            </div>
+            <p style="margin-top: 10px; font-size: 12px; color: #666;">
+                ✅ Menggunakan CloudConvert API - Kualitas Premium seperti iLovePDF<br>
+                💡 Gratis: 25 konversi/hari | Support: PDF ↔ Word dengan gambar & layout
+            </p>
+        </div>
+
+
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('pdf-to-word')">PDF → Word</button>
+            <button class="tab" onclick="switchTab('word-to-pdf')">Word → PDF</button>
+        </div>
+
+        <!-- PDF to Word Section -->
+        <div id="pdf-to-word" class="converter-section active">
+            <div class="upload-area" id="pdfUploadArea" onclick="document.getElementById('pdfInput').click()">
+                <div class="upload-icon">📄</div>
+                <p><strong>Klik atau seret file PDF di sini</strong></p>
+                <p style="color: #666; font-size: 14px; margin-top: 10px;">Format yang didukung: PDF</p>
+            </div>
+            <input type="file" id="pdfInput" accept=".pdf">
+            
+            <div class="file-info" id="pdfFileInfo">
+                <div class="file-name" id="pdfFileName"></div>
+                <div class="file-size" id="pdfFileSize"></div>
+            </div>
+
+            <button class="convert-btn" id="pdfConvertBtn" onclick="convertPdfToWord()">
+                Konversi ke Word (.docx)
+            </button>
+
+            <div class="progress-bar" id="pdfProgress">
+                <div class="progress-fill" id="pdfProgressFill"></div>
+            </div>
+
+            <div class="status" id="pdfStatus"></div>
+        </div>
+
+        <!-- Word to PDF Section -->
+        <div id="word-to-pdf" class="converter-section">
+            <div class="upload-area" id="wordUploadArea" onclick="document.getElementById('wordInput').click()">
+                <div class="upload-icon">📝</div>
+                <p><strong>Klik atau seret file Word di sini</strong></p>
+                <p style="color: #666; font-size: 14px; margin-top: 10px;">Format yang didukung: DOCX</p>
+            </div>
+            <input type="file" id="wordInput" accept=".docx">
+            
+            <div class="file-info" id="wordFileInfo">
+                <div class="file-name" id="wordFileName"></div>
+                <div class="file-size" id="wordFileSize"></div>
+            </div>
+
+            <button class="convert-btn" id="wordConvertBtn" onclick="convertWordToPdf()">
+                Konversi ke PDF
+            </button>
+
+            <div class="progress-bar" id="wordProgress">
+                <div class="progress-fill" id="wordProgressFill"></div>
+            </div>
+
+            <div class="status" id="wordStatus"></div>
+        </div>
+
+        <div class="footer">
+            <p>© 2026 Seputar Converter — Dibuat dengan ❤️ di UIN Ar-Raniry Banda Aceh</p>
+            <div class="powered-by">
+    <span>Powered by</span>
+    <a href="https://www.instagram.com/seputaruinar" target="_blank">
+    <img src="logo1.png" alt="Logo" class="footer-logo">
+    </a>
+  </div>
+        </div>
+    </div>
+
+    <script>
+        let pdfFile = null;
+        let wordFile = null;
+        let currentMethod = 'api'; // Langsung gunakan API
+
+        function selectMethod(method) {
+            currentMethod = method;
+            
+            document.querySelectorAll('.method-option').forEach(opt => {
+                opt.classList.remove('active');
+            });
+            event.target.closest('.method-option').classList.add('active');
+
+            const apiSetup = document.getElementById('apiSetup');
+            const infoBox = document.getElementById('infoBox');
+
+            if (method === 'api') {
+                apiSetup.classList.add('show');
+                infoBox.classList.remove('show');
+            } else {
+                apiSetup.classList.remove('show');
+                infoBox.classList.add('show');
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.converter-section').forEach(s => s.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tab).classList.add('active');
+        }
+
+        // PDF Upload
+        const pdfInput = document.getElementById('pdfInput');
+        const pdfUploadArea = document.getElementById('pdfUploadArea');
+
+        pdfInput.addEventListener('change', (e) => handlePdfFile(e.target.files[0]));
+        pdfUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            pdfUploadArea.classList.add('dragover');
+        });
+        pdfUploadArea.addEventListener('dragleave', () => {
+            pdfUploadArea.classList.remove('dragover');
+        });
+        pdfUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            pdfUploadArea.classList.remove('dragover');
+            handlePdfFile(e.dataTransfer.files[0]);
+        });
+
+        function handlePdfFile(file) {
+            if (file && file.type === 'application/pdf') {
+                pdfFile = file;
+                document.getElementById('pdfFileName').textContent = file.name;
+                document.getElementById('pdfFileSize').textContent = formatFileSize(file.size);
+                document.getElementById('pdfFileInfo').classList.add('show');
+                document.getElementById('pdfConvertBtn').classList.add('show');
+                document.getElementById('pdfStatus').classList.remove('show');
+                document.getElementById('pdfProgress').classList.remove('show');
+            } else {
+                showStatus('pdfStatus', 'error', 'Mohon pilih file PDF yang valid');
+            }
+        }
+
+        // Word Upload
+        const wordInput = document.getElementById('wordInput');
+        const wordUploadArea = document.getElementById('wordUploadArea');
+
+        wordInput.addEventListener('change', (e) => handleWordFile(e.target.files[0]));
+        wordUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            wordUploadArea.classList.add('dragover');
+        });
+        wordUploadArea.addEventListener('dragleave', () => {
+            wordUploadArea.classList.remove('dragover');
+        });
+        wordUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            wordUploadArea.classList.remove('dragover');
+            handleWordFile(e.dataTransfer.files[0]);
+        });
+
+        function handleWordFile(file) {
+            if (file && file.name.endsWith('.docx')) {
+                wordFile = file;
+                document.getElementById('wordFileName').textContent = file.name;
+                document.getElementById('wordFileSize').textContent = formatFileSize(file.size);
+                document.getElementById('wordFileInfo').classList.add('show');
+                document.getElementById('wordConvertBtn').classList.add('show');
+                document.getElementById('wordStatus').classList.remove('show');
+                document.getElementById('wordProgress').classList.remove('show');
+            } else {
+                showStatus('wordStatus', 'error', 'Mohon pilih file DOCX yang valid');
+            }
+        }
+
+        async function convertPdfToWord() {
+            if (!pdfFile) return;
+            await convertWithAPI('pdf', 'docx');
+        }
+
+        async function convertWordToPdf() {
+            if (!wordFile) return;
+            await convertWithAPI('docx', 'pdf');
+        }
+
+        async function convertWithAPI(inputFormat, outputFormat) {
+            const apiKey = document.getElementById('apiKey').value.trim();
+            
+            if (!apiKey) {
+                showStatus(inputFormat === 'pdf' ? 'pdfStatus' : 'wordStatus', 'error', '❌ Mohon masukkan API Key terlebih dahulu!');
+                return;
+            }
+
+            const file = inputFormat === 'pdf' ? pdfFile : wordFile;
+            const statusId = inputFormat === 'pdf' ? 'pdfStatus' : 'wordStatus';
+            const progressId = inputFormat === 'pdf' ? 'pdfProgress' : 'wordProgress';
+            const progressFillId = inputFormat === 'pdf' ? 'pdfProgressFill' : 'wordProgressFill';
+
+            try {
+                showStatus(statusId, 'processing', '⏳ Mengunggah file ke CloudConvert...');
+                document.getElementById(progressId).classList.add('show');
+                document.getElementById(progressFillId).style.width = '20%';
+
+                // Create Job
+                const createJobResponse = await fetch('https://api.cloudconvert.com/v2/jobs', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        tasks: {
+                            'import-file': {
+                                operation: 'import/upload'
+                            },
+                            'convert-file': {
+                                operation: 'convert',
+                                input: ['import-file'],
+                                input_format: inputFormat,
+                                output_format: outputFormat
+                            },
+                            'export-file': {
+                                operation: 'export/url',
+                                input: ['convert-file']
+                            }
+                        }
+                    })
+                });
+
+                if (!createJobResponse.ok) {
+                    const errorData = await createJobResponse.json();
+                    console.error('API Error:', errorData);
+                    throw new Error(errorData.message || 'Gagal membuat job konversi. Periksa API key Anda.');
+                }
+
+                const jobData = await createJobResponse.json();
+                const uploadTask = jobData.data.tasks.find(t => t.operation === 'import/upload');
+
+                document.getElementById(progressFillId).style.width = '40%';
+                showStatus(statusId, 'processing', '📤 Mengunggah file...');
+
+                // Upload File
+                const formData = new FormData();
+                
+                // Add all form parameters from CloudConvert
+                const formParams = uploadTask.result.form.parameters;
+                for (const key in formParams) {
+                    formData.append(key, formParams[key]);
+                }
+                
+                // Add the file last
+                formData.append('file', file);
+
+                const uploadResponse = await fetch(uploadTask.result.form.url, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!uploadResponse.ok) {
+                    const errorText = await uploadResponse.text();
+                    console.error('Upload error:', errorText);
+                    throw new Error('Gagal mengunggah file: ' + uploadResponse.status);
+                }
+
+                document.getElementById(progressFillId).style.width = '60%';
+                showStatus(statusId, 'processing', '⚙️ Sedang mengkonversi...');
+
+                // Wait for conversion
+                let jobStatus = 'processing';
+                let attempts = 0;
+                const maxAttempts = 60;
+
+                while (jobStatus === 'processing' && attempts < maxAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                    
+                    const statusResponse = await fetch(`https://api.cloudconvert.com/v2/jobs/${jobData.data.id}`, {
+                        headers: {
+                            'Authorization': `Bearer ${apiKey}`
+                        }
+                    });
+
+                    const statusData = await statusResponse.json();
+                    jobStatus = statusData.data.status;
+
+                    const progress = 60 + (attempts / maxAttempts * 30);
+                    document.getElementById(progressFillId).style.width = progress + '%';
+                    attempts++;
+                }
+
+                if (jobStatus !== 'finished') {
+                    throw new Error('Konversi gagal atau timeout');
+                }
+
+                document.getElementById(progressFillId).style.width = '90%';
+                showStatus(statusId, 'processing', '⬇️ Mengunduh hasil...');
+
+                // Get download URL
+                const finalJobResponse = await fetch(`https://api.cloudconvert.com/v2/jobs/${jobData.data.id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`
+                    }
+                });
+
+                const finalJobData = await finalJobResponse.json();
+                const exportTask = finalJobData.data.tasks.find(t => t.operation === 'export/url');
+                
+                if (!exportTask || !exportTask.result || !exportTask.result.files || !exportTask.result.files[0]) {
+                    throw new Error('Tidak dapat menemukan file hasil konversi');
+                }
+
+                const downloadUrl = exportTask.result.files[0].url;
+
+                // Download file
+                const downloadResponse = await fetch(downloadUrl);
+                const blob = await downloadResponse.blob();
+
+                const outputFilename = file.name.replace(`.${inputFormat}`, `.${outputFormat}`);
+                downloadFile(blob, outputFilename);
+
+                document.getElementById(progressFillId).style.width = '100%';
+                showStatus(statusId, 'success', '✅ Konversi berhasil! File sedang diunduh dengan kualitas premium.');
+
+                setTimeout(() => {
+                    document.getElementById(progressId).classList.remove('show');
+                }, 2000);
+
+            } catch (error) {
+                console.error(error);
+                showStatus(statusId, 'error', '❌ ' + error.message);
+                document.getElementById(progressId).classList.remove('show');
+            }
+        }
+
+        function downloadFile(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function showStatus(id, type, message) {
+            const status = document.getElementById(id);
+            status.className = `status show ${type}`;
+            status.textContent = message;
+        }
+    </script>
+</body>
+</html>
